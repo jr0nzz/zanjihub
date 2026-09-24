@@ -1,4 +1,4 @@
-local RAP = ""
+local RAP = "https://raw.githubusercontent.com/jr0nzz/zanjihub/refs/heads/main/rideapet"
 
 local byGameId = {
     [10035204815] = RAP,
