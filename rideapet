@@ -1,1 +1,96 @@
+--==================================================
+-- ZANJIHUB RAP • OFFICIAL LOADER v1
+-- Upload this loader and the protected main source separately.
+-- Users execute ONLY this file.
+--==================================================
 
+local MAIN_SOURCE_URL = "https://raw.githubusercontent.com/ronilo191002/zanjihub/refs/heads/main/rideapet"
+local LOADER_URL = "https://raw.githubusercontent.com/jr0nzz/zanjihub/refs/heads/main/rideapet"
+
+local env =
+    type(getgenv) == "function"
+    and getgenv()
+    or _G
+
+if not game:IsLoaded() then
+    game.Loaded:Wait()
+end
+
+-- Prevent duplicate loader starts in the same DataModel.
+if env.ZANJIHUB_RAP_LOADER_RUNNING_GAME == game then
+    return
+end
+
+env.ZANJIHUB_RAP_LOADER_RUNNING_GAME = game
+
+local function cleanup()
+    if env.ZANJIHUB_RAP_LOADER_RUNNING_GAME == game then
+        env.ZANJIHUB_RAP_LOADER_RUNNING_GAME = nil
+    end
+end
+
+local function fail(message)
+    cleanup()
+    warn("[ZANJIHUB Loader] " .. tostring(message))
+end
+
+if MAIN_SOURCE_URL == ""
+    or MAIN_SOURCE_URL:find("PASTE_PROTECTED_MAIN_RAW_URL_HERE", 1, true)
+then
+    fail("MAIN_SOURCE_URL is not configured.")
+    return
+end
+
+-- Let the main source's existing Auto Execute feature re-run THIS loader.
+if LOADER_URL ~= ""
+    and not LOADER_URL:find("PASTE_THIS_LOADER_RAW_URL_HERE", 1, true)
+then
+    env.ZANJIHUB_EGG_AUTOEXEC_URL = LOADER_URL
+end
+
+local okSource, source = pcall(function()
+    return game:HttpGet(MAIN_SOURCE_URL, true)
+end)
+
+if not okSource
+    or type(source) ~= "string"
+    or #source < 100
+then
+    fail("Could not download protected main source: " .. tostring(source))
+    return
+end
+
+local compiled, compileError = loadstring(source)
+
+if not compiled then
+    fail("Main source compile failed: " .. tostring(compileError))
+    return
+end
+
+-- Short-lived one-time capability. It exists only while this loader starts
+-- the protected main source and is consumed immediately by the main chunk.
+local capability = {
+    Tag = "ZANJIHUB_RAP_LOADER_V1",
+    Game = game,
+    JobId = tostring(game.JobId or ""),
+    CreatedAt = os.clock(),
+    Nonce = tostring(game:GetService("HttpService"):GenerateGUID(false))
+        .. ":"
+        .. tostring(os.clock()),
+    Consumed = false,
+}
+
+env.ZANJIHUB_EGG_LOADER_CAP = capability
+
+local okRun, runError = pcall(compiled, capability)
+
+-- Never leave a reusable authorization token behind.
+if env.ZANJIHUB_EGG_LOADER_CAP == capability then
+    env.ZANJIHUB_EGG_LOADER_CAP = nil
+end
+
+cleanup()
+
+if not okRun then
+    warn("[ZANJIHUB Loader] Main source runtime error: " .. tostring(runError))
+end
