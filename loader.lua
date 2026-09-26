@@ -1,67 +1,64 @@
-local RAP =
-    "https://raw.githubusercontent.com/jr0nzz/zanjihub/refs/heads/main/rideapet.lua"
-
-local SAE =
-    "https://raw.githubusercontent.com/jr0nzz/zanjihub/refs/heads/main/stealanegg.lua"
-
-local byGameId = {
-    [10035204815] = RAP,
-    [10563114921] = SAE,
-}
-
-local byPlaceId = {
-    [124216119978534] = RAP,
-    [107778070777162] = SAE,
-}
-
 if not game:IsLoaded() then
     game.Loaded:Wait()
 end
 
-local gameId =
-    game.GameId
+local env = (getgenv and getgenv()) or _G
 
-while gameId == 0
-    and game.PlaceId == 0
-do
-    task.wait()
-    gameId = game.GameId
-end
-
-local url =
-    byGameId[gameId]
-    or byPlaceId[game.PlaceId]
-
-if not url then
+if env.__ZANJIHUB_LOADING then
     return
 end
 
-for attempt = 1, 3 do
-    local ok, source =
-        pcall(
-            game.HttpGet,
-            game,
-            url,
-            true
-        )
+env.__ZANJIHUB_LOADING = true
 
-    if ok
-        and type(source) == "string"
-        and #source > 100
-    then
-        local chunk, compileError =
-            loadstring(source)
+local GAG = "https://raw.githubusercontent.com/jr0nzz/zanjihub/refs/heads/main/zanjihub.lua"
+local RAP = "https://raw.githubusercontent.com/jr0nzz/zanjihub/refs/heads/main/rideapet.lua"
+local SAE = "https://raw.githubusercontent.com/jr0nzz/zanjihub/refs/heads/main/stealanegg.lua"
 
-        if type(chunk) == "function" then
-            chunk()
-            return
-        end
+local ROUTES = {
+    [126884695634066] = GAG,
+    [124977557560410] = GAG,
+    [129954712878723] = GAG,
+    [108890465381067] = GAG,
 
-        warn(
-            "[ZANJIHUB] Loader compile failed: "
-                .. tostring(compileError)
-        )
+    [124216119978534] = RAP,
+    [107778070777162] = SAE,
+}
+
+local ok, err = pcall(function()
+    local url = ROUTES[game.PlaceId]
+
+    if not url then
+        error("Unsupported PlaceId: " .. game.PlaceId)
     end
 
-    task.wait(0.5)
+    local source
+
+    for i = 1, 3 do
+        local success, result = pcall(game.HttpGet, game, url, true)
+
+        if success and type(result) == "string" and #result > 0 then
+            source = result
+            break
+        end
+
+        task.wait(i * 0.5)
+    end
+
+    if not source then
+        error("Failed to download script")
+    end
+
+    local chunk, compileError = loadstring(source)
+
+    if not chunk then
+        error(compileError)
+    end
+
+    chunk()
+end)
+
+env.__ZANJIHUB_LOADING = nil
+
+if not ok then
+    warn("[ZANJIHUB] " .. tostring(err))
 end
