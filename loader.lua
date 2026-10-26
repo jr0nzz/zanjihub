@@ -11,6 +11,7 @@ end
 env.__ZANJIHUB_LOADING = true
 
 local GAG = "https://raw.githubusercontent.com/jr0nzz/zanjihub/refs/heads/main/zanjihub.lua"
+local AD = "https://raw.githubusercontent.com/jr0nzz/zanjihub/refs/heads/main/animedice.lua"
 local RAP = "https://raw.githubusercontent.com/jr0nzz/zanjihub/refs/heads/main/rideapet.lua"
 local SAE = "https://raw.githubusercontent.com/jr0nzz/zanjihub/refs/heads/main/stealanegg.lua"
 
@@ -19,7 +20,7 @@ local ROUTES = {
     [124977557560410] = GAG,
     [129954712878723] = GAG,
     [108890465381067] = GAG,
-
+    [113290951185459] = AD,
     [124216119978534] = RAP,
     [107778070777162] = SAE,
 }
